@@ -65,6 +65,32 @@ volatile bool printLCD = 0;
 volatile bool printLCDLoop = 0;
 int prevSpeed = 0;
 
+
+byte timer1Step = 0;
+bool timer1Start = 0;
+int timer1  = 0;
+unsigned long prevMillisTimer1  = 0;
+
+byte timer2Step = 0;
+bool timer2Start = 0;
+int timer2  = 0;
+unsigned long prevMillisTimer2  = 0;
+
+byte timer3Step = 0;
+bool timer3Start = 0;
+int timer3  = 0;
+unsigned long prevMillisTimer3  = 0;
+
+byte timer4Step = 0;
+bool timer4Start = 0;
+int timer4  = 0;
+unsigned long prevMillisTimer4  = 0;
+
+bool motor1Start = 0;
+bool motor2Start = 0;
+bool motor3Start = 0;
+bool motor4Start = 0;
+
 byte Y[8] = 
 {
   B10001,
@@ -96,14 +122,13 @@ ISR (TIMER0_COMPA_vect) //функция, вызываемая таймером-
       valButtonPress = 1;    
     }
   }
-
-  
 }
 
 
 
 void setup() 
 {
+  Serial.begin(9600);
   Wire.begin();
   
   pinMode(LED_START, OUTPUT);
@@ -159,11 +184,21 @@ void setup()
   Wire.beginTransmission(8); // transmit to device #8
   Wire.write(111);              // sends one byte
   Wire.endTransmission();    // stop transmitting
+
+  motor1Start = 1;
+  motor2Start = 1;
+  motor3Start = 1;
+  motor4Start = 1;
 }
 
 void loop() 
 {
-  clearEEPROM();
+  
+  motor1();
+  motor2();
+  motor3();
+  motor4();
+  /*clearEEPROM();
   speedDelay();
   cli();
   valButtonPressLoop = valButtonPress;
@@ -298,6 +333,7 @@ void loop()
         }
     break;
   }
+  */
 }
 
 void writeEEPROM(int address, int value1)
@@ -427,96 +463,260 @@ void beep()
   digitalWrite(BEEP, LOW); 
 }
 
-void motor1()
+bool motor1()
 {
-  Wire.beginTransmission(8); // transmit to device #8
-  Wire.write(11);              // sends one byte
-  Wire.endTransmission();    // stop transmitting
-  analogWrite(ENABLE, ENABLE_START);
-  digitalWrite(MOTOR1_A, HIGH); 
-  digitalWrite(MOTOR1_B, LOW);
-  digitalWrite(BEEP_12, HIGH);
-  delay(DELAY_M1);
-  digitalWrite(BEEP_12, LOW);
-  delay(DELAY_M1);
-  analogWrite(ENABLE, ENABLE_LOW);
-  delay(200);
-  analogWrite(ENABLE, ENABLE_STOP);
-  digitalWrite(MOTOR1_A, LOW); 
-  digitalWrite(MOTOR1_B, HIGH);
-  delay(DELAY_M1_OTPUSKANIE);
-  analogWrite(ENABLE, 0);
-  digitalWrite(MOTOR1_A, LOW); 
-  digitalWrite(MOTOR1_B, LOW);
+    if (motor2Start == 1){
+        timer2Step = 0;
+        motor2Start = 0; 
+    }
+    if (timer1Start == 0){
+        prevMillisTimer1 = millis();
+        timer1Start = 1;
+    }
+    timer1 = millis() - prevMillisTimer1;
+
+   if (timer1Step == 0) {
+    Wire.beginTransmission(8); // transmit to device #8
+    Wire.write(11);              // sends one byte
+    Wire.endTransmission();    // stop transmitting
+    analogWrite(ENABLE, ENABLE_START);
+    digitalWrite(MOTOR1_A, HIGH); 
+    digitalWrite(MOTOR1_B, LOW);
+    digitalWrite(BEEP_12, HIGH);
+    timer1Step = 1;
+    timer1Start = 0;
+    Serial.println("HL ENABLE_START Sound_ON 1");
+    return 0;
+  }
+  
+  
+  if ((timer1Step == 1) && (timer1 >= DELAY_M1)) {
+    digitalWrite(BEEP_12, LOW);
+    timer1Step = 2;
+    timer1Start = 0;
+    Serial.println("Sound_OFF 2");
+    return 0;
+  }
+
+  if ((timer1Step == 2) && (timer1 >= DELAY_M1)) {
+    analogWrite(ENABLE, ENABLE_LOW);
+    timer1Step = 3;
+    timer1Start = 0;
+    Serial.println("ENABLE_LOW 3");
+    return 0;
+  }
+
+  if ((timer1Step == 3) && (timer1 >= 200)) {
+    analogWrite(ENABLE, ENABLE_STOP);
+    digitalWrite(MOTOR1_A, LOW); 
+    digitalWrite(MOTOR1_B, HIGH);
+    timer1Step = 4;
+    timer1Start = 0;
+    Serial.println("LH ENABLE_STOP 4");
+    return 0;
+  }
+  
+  if ((timer1Step == 4) && (timer1 >= DELAY_M1_OTPUSKANIE)) {
+    analogWrite(ENABLE, 0);
+    digitalWrite(MOTOR1_A, LOW); 
+    digitalWrite(MOTOR1_B, LOW);
+    timer1Step = 5;
+    timer1Start = 0;
+    Serial.println("LL 0 5");
+    return 0;
+  }
 }
 
-void motor2()
+bool motor2()
 {
-  Wire.beginTransmission(8); // transmit to device #8
-  Wire.write(22);              // sends one byte
-  Wire.endTransmission();    // stop transmitting
-  analogWrite(ENABLE, ENABLE_START);
-  digitalWrite(MOTOR2_A, HIGH); 
-  digitalWrite(MOTOR2_B, LOW);
-  digitalWrite(BEEP_12, HIGH);
-  delay(DELAY_M2);
-  digitalWrite(BEEP_12, LOW);
-  delay(DELAY_M2);
-  analogWrite(ENABLE, ENABLE_LOW);
-  delay(200);
-  analogWrite(ENABLE, ENABLE_STOP);
-  digitalWrite(MOTOR2_A, LOW); 
-  digitalWrite(MOTOR2_B, HIGH);
-  delay(DELAY_M2_OTPUSKANIE);
-  analogWrite(ENABLE, 0);
-  digitalWrite(MOTOR2_A, LOW); 
-  digitalWrite(MOTOR2_B, LOW);
+    if (motor2Start == 1){
+        timer2Step = 0;
+        motor2Start = 0; 
+    }
+    if (timer2Start == 0){
+        prevMillisTimer2 = millis();
+        timer2Start = 1;
+    }
+    timer2 = millis() - prevMillisTimer2;
+
+   if (timer2Step == 0) {
+    Wire.beginTransmission(8); // transmit to device #8
+    Wire.write(22);              // sends one byte
+    Wire.endTransmission();    // stop transmitting
+    analogWrite(ENABLE, ENABLE_START);
+    digitalWrite(MOTOR2_A, HIGH); 
+    digitalWrite(MOTOR2_B, LOW);
+    digitalWrite(BEEP_12, HIGH);
+    timer2Step = 1;
+    timer2Start = 0;
+    Serial.println("2HL ENABLE_START Sound_ON 1");
+    return 0;
+  }
+  
+  
+  if ((timer2Step == 1) && (timer2 >= DELAY_M2)) {
+    digitalWrite(BEEP_12, LOW);
+    timer2Step = 2;
+    timer2Start = 0;
+    Serial.println("2Sound_OFF 2");
+    return 0;
+  }
+
+  if ((timer2Step == 2) && (timer2 >= DELAY_M2)) {
+    analogWrite(ENABLE, ENABLE_LOW);
+    timer2Step = 3;
+    timer2Start = 0;
+    Serial.println("2ENABLE_LOW 3");
+    return 0;
+  }
+
+  if ((timer2Step == 3) && (timer2 >= 200)) {
+    analogWrite(ENABLE, ENABLE_STOP);
+    digitalWrite(MOTOR2_A, LOW); 
+    digitalWrite(MOTOR2_B, HIGH);
+    timer2Step = 4;
+    timer2Start = 0;
+    Serial.println("2LH ENABLE_STOP 4");
+    return 0;
+  }
+  
+  if ((timer2Step == 4) && (timer2 >= DELAY_M2_OTPUSKANIE)) {
+    analogWrite(ENABLE, 0);
+    digitalWrite(MOTOR2_A, LOW); 
+    digitalWrite(MOTOR2_B, LOW);
+    timer2Step = 5;
+    timer2Start = 0;
+    Serial.println("2LL 0 5");
+    return 0;
+  }
 }
 
-void motor3()
+bool motor3()
 {
-  Wire.beginTransmission(8); // transmit to device #8
-  Wire.write(33);              // sends one byte
-  Wire.endTransmission();    // stop transmitting
-  analogWrite(ENABLE, ENABLE_START);
-  digitalWrite(MOTOR3_A, HIGH); 
-  digitalWrite(MOTOR3_B, LOW);
-  digitalWrite(BEEP_34, HIGH);
-  delay(DELAY_M3);
-  digitalWrite(BEEP_34, LOW);
-  delay(DELAY_M3);
-  analogWrite(ENABLE, ENABLE_LOW);
-  delay(200);
-  analogWrite(ENABLE, ENABLE_STOP);
-  digitalWrite(MOTOR3_A, LOW); 
-  digitalWrite(MOTOR3_B, HIGH);
-  delay(DELAY_M3_OTPUSKANIE);
-  analogWrite(ENABLE, 0);
-  digitalWrite(MOTOR3_A, LOW); 
-  digitalWrite(MOTOR3_B, LOW);
+    if (motor3Start == 1){
+        timer3Step = 0;
+        motor3Start = 0; 
+    }
+    if (timer3Start == 0){
+        prevMillisTimer3 = millis();
+        timer3Start = 1;
+    }
+    timer3 = millis() - prevMillisTimer3;
+
+   if (timer3Step == 0) {
+    Wire.beginTransmission(8); // transmit to device #8
+    Wire.write(33);              // sends one byte
+    Wire.endTransmission();    // stop transmitting
+    analogWrite(ENABLE, ENABLE_START);
+    digitalWrite(MOTOR3_A, HIGH); 
+    digitalWrite(MOTOR3_B, LOW);
+    digitalWrite(BEEP_34, HIGH);
+    timer3Step = 1;
+    timer3Start = 0;
+    Serial.println("3HL ENABLE_START Sound_ON 1");
+    return 0;
+  }
+  
+  
+  if ((timer3Step == 1) && (timer3 >= DELAY_M3)) {
+    digitalWrite(BEEP_34, LOW);
+    timer3Step = 2;
+    timer3Start = 0;
+    Serial.println("3Sound_OFF 2");
+    return 0;
+  }
+
+  if ((timer3Step == 2) && (timer3 >= DELAY_M3)) {
+    analogWrite(ENABLE, ENABLE_LOW);
+    timer3Step = 3;
+    timer3Start = 0;
+    Serial.println("3ENABLE_LOW 3");
+    return 0;
+  }
+
+  if ((timer3Step == 3) && (timer3 >= 200)) {
+    analogWrite(ENABLE, ENABLE_STOP);
+    digitalWrite(MOTOR3_A, LOW); 
+    digitalWrite(MOTOR3_B, HIGH);
+    timer3Step = 4;
+    timer3Start = 0;
+    Serial.println("3LH ENABLE_STOP 4");
+    return 0;
+  }
+  
+  if ((timer3Step == 4) && (timer3 >= DELAY_M3_OTPUSKANIE)) {
+    analogWrite(ENABLE, 0);
+    digitalWrite(MOTOR3_A, LOW); 
+    digitalWrite(MOTOR3_B, LOW);
+    timer3Step = 5;
+    timer3Start = 0;
+    Serial.println("3LL 0 5");
+    return 0;
+  }
 }
 
-void motor4()
+bool motor4()
 {
-  Wire.beginTransmission(8); // transmit to device #8
-  Wire.write(44);              // sends one byte
-  Wire.endTransmission();    // stop transmitting
-  analogWrite(ENABLE, ENABLE_START);
-  digitalWrite(MOTOR4_A, HIGH); 
-  digitalWrite(MOTOR4_B, LOW);
-  digitalWrite(BEEP_34, HIGH);
-  delay(DELAY_M4);
-  digitalWrite(BEEP_34, LOW);
-  delay(DELAY_M4);
-  analogWrite(ENABLE, ENABLE_LOW);
-  delay(200);
-  analogWrite(ENABLE, ENABLE_STOP);
-  digitalWrite(MOTOR4_A, LOW); 
-  digitalWrite(MOTOR4_B, HIGH);
-  delay(DELAY_M4_OTPUSKANIE);
-  analogWrite(ENABLE, 0);
-  digitalWrite(MOTOR4_A, LOW); 
-  digitalWrite(MOTOR4_B, LOW);
+    if (motor4Start == 1){
+      timer4Step = 0;
+      motor4Start = 0; 
+    }
+    if (timer4Start == 0){
+        prevMillisTimer4 = millis();
+        timer4Start = 1;
+    }
+    timer4 = millis() - prevMillisTimer4;
+
+   if (timer4Step == 0) {
+    Wire.beginTransmission(8); // transmit to device #8
+    Wire.write(44);              // sends one byte
+    Wire.endTransmission();    // stop transmitting
+    analogWrite(ENABLE, ENABLE_START);
+    digitalWrite(MOTOR4_A, HIGH); 
+    digitalWrite(MOTOR4_B, LOW);
+    digitalWrite(BEEP_34, HIGH);
+    timer4Step = 1;
+    timer4Start = 0;
+    Serial.println("4HL ENABLE_START Sound_ON 1");
+    return 0;
+  }
+  
+  
+  if ((timer4Step == 1) && (timer4 >= DELAY_M4)) {
+    digitalWrite(BEEP_34, LOW);
+    timer4Step = 2;
+    timer4Start = 0;
+    Serial.println("4Sound_OFF 2");
+    return 0;
+  }
+
+  if ((timer4Step == 2) && (timer4 >= DELAY_M4)) {
+    analogWrite(ENABLE, ENABLE_LOW);
+    timer4Step = 3;
+    timer4Start = 0;
+    Serial.println("4ENABLE_LOW 3");
+    return 0;
+  }
+
+  if ((timer4Step == 3) && (timer4 >= 200)) {
+    analogWrite(ENABLE, ENABLE_STOP);
+    digitalWrite(MOTOR4_A, LOW); 
+    digitalWrite(MOTOR4_B, HIGH);
+    timer4Step = 4;
+    timer4Start = 0;
+    Serial.println("4LH ENABLE_STOP 4");
+    return 0;
+  }
+  
+  if ((timer4Step == 4) && (timer4 >= DELAY_M4_OTPUSKANIE)) {
+    analogWrite(ENABLE, 0);
+    digitalWrite(MOTOR4_A, LOW); 
+    digitalWrite(MOTOR4_B, LOW);
+    timer4Step = 5;
+    timer4Start = 0;
+    Serial.println("4LL 0 5");
+    return 0;
+  }
 }
 
 void easyMode()
