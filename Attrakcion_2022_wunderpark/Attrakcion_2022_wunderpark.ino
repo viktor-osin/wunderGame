@@ -86,10 +86,28 @@ bool timer4Start = 0;
 int timer4  = 0;
 unsigned long prevMillisTimer4  = 0;
 
+bool timerBallsStart = 0;
+int timerBalls  = 0;
+unsigned long prevMillisTimerBalls  = 0;
+
 bool motor1Start = 0;
 bool motor2Start = 0;
 bool motor3Start = 0;
 bool motor4Start = 0;
+
+//для рандомного заполнения шаров
+int ball1 = 0; 
+int ball2 = 0; 
+int ball3 = 0; 
+int ball4 = 0;
+
+bool randReset = 0;
+int balls[28];
+int prevBall = 0;
+int randBall = 0;
+
+
+
 
 byte Y[8] = 
 {
@@ -185,19 +203,87 @@ void setup()
   Wire.write(111);              // sends one byte
   Wire.endTransmission();    // stop transmitting
 
-  motor1Start = 1;
-  motor2Start = 1;
-  motor3Start = 1;
-  motor4Start = 1;
+  for (int i = 0; i < 28; i++) {
+      do {
+        randBall = random(1,5);
+      }
+      while(prevBall == randBall);
+      prevBall = randBall;
+      Serial.println(String(randBall) + "  NOWWWW"); 
+      randReset = 0;
+      if (randBall == 1) {
+        (ball1 < 7) ? ball1++ : randReset = 1;   
+      }
+      if (randBall == 2) {
+        (ball2 < 7) ? ball2++ : randReset = 1;  
+      }
+      if (randBall == 3) {
+        (ball3 < 7) ? ball3++ : randReset = 1;  
+      }
+      if (randBall == 4) {
+        (ball4 < 7) ? ball4++ : randReset = 1;  
+      }
+      if (randReset != 1)
+      {
+        balls[i] = randBall;
+      }
+      else
+      {
+        if(i > 0)
+          i = i-1;
+        else
+          i = -1;
+      } 
+  }
+  for (int i = 0; i < 28; i++) {
+    Serial.println(balls[i]);
+  } 
 }
 
 void loop() 
 {
+  prevMillisTimerBalls = millis();
+  //отключаем таймеры моторов (всего 4 шага времени (step) задержки на 1 мотор, 5-й останавливает)
+  timer1Step = 5;
+  timer2Step = 5;
+  timer3Step = 5;
+  timer4Step = 5;
   
-  motor1();
-  motor2();
-  motor3();
-  motor4();
+  int i = 0; 
+  while (i < 28) {
+    //добавить таймер, который будет ставить в 1 для следующего шара по истечению времени
+    timerBalls = millis() - prevMillisTimerBalls;
+    if (timerBalls >= 1000) {
+      i++;
+      prevMillisTimerBalls = millis();
+    }
+    if (balls[i] == 1)
+    {
+        motor1Start = 1;
+        balls[i] = 0;
+    }
+    if (balls[i] == 2)
+    {
+        motor2Start = 1;
+        balls[i] = 0;
+    }
+    if (balls[i] == 3)
+    {
+        motor3Start = 1;
+        balls[i] = 0;
+    }
+    if (balls[i] == 4)
+    {
+        motor4Start = 1;
+        balls[i] = 0;
+    }
+     motor1();
+     motor2();
+     motor3();
+     motor4();
+  }
+
+
   /*clearEEPROM();
   speedDelay();
   cli();
@@ -465,9 +551,9 @@ void beep()
 
 bool motor1()
 {
-    if (motor2Start == 1){
-        timer2Step = 0;
-        motor2Start = 0; 
+    if (motor1Start == 1){
+        timer1Step = 0;
+        motor1Start = 0; 
     }
     if (timer1Start == 0){
         prevMillisTimer1 = millis();
@@ -485,7 +571,7 @@ bool motor1()
     digitalWrite(BEEP_12, HIGH);
     timer1Step = 1;
     timer1Start = 0;
-    Serial.println("HL ENABLE_START Sound_ON 1");
+    Serial.println("ENABLE 1");
     return 0;
   }
   
@@ -494,7 +580,6 @@ bool motor1()
     digitalWrite(BEEP_12, LOW);
     timer1Step = 2;
     timer1Start = 0;
-    Serial.println("Sound_OFF 2");
     return 0;
   }
 
@@ -502,7 +587,6 @@ bool motor1()
     analogWrite(ENABLE, ENABLE_LOW);
     timer1Step = 3;
     timer1Start = 0;
-    Serial.println("ENABLE_LOW 3");
     return 0;
   }
 
@@ -512,7 +596,6 @@ bool motor1()
     digitalWrite(MOTOR1_B, HIGH);
     timer1Step = 4;
     timer1Start = 0;
-    Serial.println("LH ENABLE_STOP 4");
     return 0;
   }
   
@@ -522,7 +605,7 @@ bool motor1()
     digitalWrite(MOTOR1_B, LOW);
     timer1Step = 5;
     timer1Start = 0;
-    Serial.println("LL 0 5");
+    Serial.println("STOP 1");
     return 0;
   }
 }
@@ -549,7 +632,7 @@ bool motor2()
     digitalWrite(BEEP_12, HIGH);
     timer2Step = 1;
     timer2Start = 0;
-    Serial.println("2HL ENABLE_START Sound_ON 1");
+    Serial.println("ENABLE 2");
     return 0;
   }
   
@@ -558,7 +641,6 @@ bool motor2()
     digitalWrite(BEEP_12, LOW);
     timer2Step = 2;
     timer2Start = 0;
-    Serial.println("2Sound_OFF 2");
     return 0;
   }
 
@@ -566,7 +648,6 @@ bool motor2()
     analogWrite(ENABLE, ENABLE_LOW);
     timer2Step = 3;
     timer2Start = 0;
-    Serial.println("2ENABLE_LOW 3");
     return 0;
   }
 
@@ -576,7 +657,6 @@ bool motor2()
     digitalWrite(MOTOR2_B, HIGH);
     timer2Step = 4;
     timer2Start = 0;
-    Serial.println("2LH ENABLE_STOP 4");
     return 0;
   }
   
@@ -586,7 +666,7 @@ bool motor2()
     digitalWrite(MOTOR2_B, LOW);
     timer2Step = 5;
     timer2Start = 0;
-    Serial.println("2LL 0 5");
+    Serial.println("STOP 2");
     return 0;
   }
 }
@@ -613,7 +693,7 @@ bool motor3()
     digitalWrite(BEEP_34, HIGH);
     timer3Step = 1;
     timer3Start = 0;
-    Serial.println("3HL ENABLE_START Sound_ON 1");
+    Serial.println("ENABLE 3");
     return 0;
   }
   
@@ -622,7 +702,6 @@ bool motor3()
     digitalWrite(BEEP_34, LOW);
     timer3Step = 2;
     timer3Start = 0;
-    Serial.println("3Sound_OFF 2");
     return 0;
   }
 
@@ -630,7 +709,6 @@ bool motor3()
     analogWrite(ENABLE, ENABLE_LOW);
     timer3Step = 3;
     timer3Start = 0;
-    Serial.println("3ENABLE_LOW 3");
     return 0;
   }
 
@@ -640,7 +718,6 @@ bool motor3()
     digitalWrite(MOTOR3_B, HIGH);
     timer3Step = 4;
     timer3Start = 0;
-    Serial.println("3LH ENABLE_STOP 4");
     return 0;
   }
   
@@ -650,7 +727,7 @@ bool motor3()
     digitalWrite(MOTOR3_B, LOW);
     timer3Step = 5;
     timer3Start = 0;
-    Serial.println("3LL 0 5");
+    Serial.println("STOP 3");
     return 0;
   }
 }
@@ -677,7 +754,7 @@ bool motor4()
     digitalWrite(BEEP_34, HIGH);
     timer4Step = 1;
     timer4Start = 0;
-    Serial.println("4HL ENABLE_START Sound_ON 1");
+    Serial.println("ENABLE 4");
     return 0;
   }
   
@@ -686,7 +763,6 @@ bool motor4()
     digitalWrite(BEEP_34, LOW);
     timer4Step = 2;
     timer4Start = 0;
-    Serial.println("4Sound_OFF 2");
     return 0;
   }
 
@@ -694,7 +770,6 @@ bool motor4()
     analogWrite(ENABLE, ENABLE_LOW);
     timer4Step = 3;
     timer4Start = 0;
-    Serial.println("4ENABLE_LOW 3");
     return 0;
   }
 
@@ -704,7 +779,6 @@ bool motor4()
     digitalWrite(MOTOR4_B, HIGH);
     timer4Step = 4;
     timer4Start = 0;
-    Serial.println("4LH ENABLE_STOP 4");
     return 0;
   }
   
@@ -714,7 +788,7 @@ bool motor4()
     digitalWrite(MOTOR4_B, LOW);
     timer4Step = 5;
     timer4Start = 0;
-    Serial.println("4LL 0 5");
+    Serial.println("STOP 4");
     return 0;
   }
 }
