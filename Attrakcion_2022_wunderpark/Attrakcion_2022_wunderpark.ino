@@ -198,93 +198,16 @@ void setup()
   digitalWrite(LED_VAL, LOW);
   digitalWrite(LED_START, LOW);
 
+  randomSeed(analogRead(A7));
 
   Wire.beginTransmission(8); // transmit to device #8
   Wire.write(111);              // sends one byte
   Wire.endTransmission();    // stop transmitting
-
-  for (int i = 0; i < 28; i++) {
-      do {
-        randBall = random(1,5);
-      }
-      while(prevBall == randBall);
-      prevBall = randBall;
-      Serial.println(String(randBall) + "  NOWWWW"); 
-      randReset = 0;
-      if (randBall == 1) {
-        (ball1 < 7) ? ball1++ : randReset = 1;   
-      }
-      if (randBall == 2) {
-        (ball2 < 7) ? ball2++ : randReset = 1;  
-      }
-      if (randBall == 3) {
-        (ball3 < 7) ? ball3++ : randReset = 1;  
-      }
-      if (randBall == 4) {
-        (ball4 < 7) ? ball4++ : randReset = 1;  
-      }
-      if (randReset != 1)
-      {
-        balls[i] = randBall;
-      }
-      else
-      {
-        if(i > 0)
-          i = i-1;
-        else
-          i = -1;
-      } 
-  }
-  for (int i = 0; i < 28; i++) {
-    Serial.println(balls[i]);
-  } 
 }
 
 void loop() 
 {
-  prevMillisTimerBalls = millis();
-  //отключаем таймеры моторов (всего 4 шага времени (step) задержки на 1 мотор, 5-й останавливает)
-  timer1Step = 5;
-  timer2Step = 5;
-  timer3Step = 5;
-  timer4Step = 5;
-  
-  int i = 0; 
-  while (i < 28) {
-    //добавить таймер, который будет ставить в 1 для следующего шара по истечению времени
-    timerBalls = millis() - prevMillisTimerBalls;
-    if (timerBalls >= 1000) {
-      i++;
-      prevMillisTimerBalls = millis();
-    }
-    if (balls[i] == 1)
-    {
-        motor1Start = 1;
-        balls[i] = 0;
-    }
-    if (balls[i] == 2)
-    {
-        motor2Start = 1;
-        balls[i] = 0;
-    }
-    if (balls[i] == 3)
-    {
-        motor3Start = 1;
-        balls[i] = 0;
-    }
-    if (balls[i] == 4)
-    {
-        motor4Start = 1;
-        balls[i] = 0;
-    }
-     motor1();
-     motor2();
-     motor3();
-     motor4();
-  }
-
-
-  /*clearEEPROM();
+  clearEEPROM();
   speedDelay();
   cli();
   valButtonPressLoop = valButtonPress;
@@ -344,7 +267,7 @@ void loop()
     case 1:
         if(printLCD == 0)
         {
-            //вывести пробный режим
+            //вывести первый режим
             lcd.setCursor(5,0);
             lcd.print("   ");
             lcd.setCursor(5,0);
@@ -370,7 +293,6 @@ void loop()
     case 2:
         if(printLCD == 0)
         {
-            //вывести пробный режим
             lcd.setCursor(5,0);
             lcd.print("   ");
             lcd.setCursor(5,0);
@@ -396,7 +318,7 @@ void loop()
     case 3:
         if(printLCD == 0)
         {
-            //вывести пробный режим
+            //вывести сложный режим
             lcd.setCursor(5,0);
             lcd.print("   ");
             lcd.setCursor(5,0);
@@ -414,12 +336,10 @@ void loop()
           cli();
           startButtonPress = 0;
           sei();
-          startButtonPressLoop = 0;
-          //прописать режим пробный  
+          startButtonPressLoop = 0;  
         }
     break;
   }
-  */
 }
 
 void writeEEPROM(int address, int value1)
@@ -793,6 +713,45 @@ bool motor4()
   }
 }
 
+void getRandomBallsArray()
+{
+  for (int i = 0; i < 28; i++) {
+      do {
+        randBall = random(1,5);
+      }
+      while(prevBall == randBall);
+      prevBall = randBall;
+      Serial.println(String(randBall) + "  NOWWWW"); 
+      randReset = 0;
+      if (randBall == 1) {
+        (ball1 < 7) ? ball1++ : randReset = 1;   
+      }
+      if (randBall == 2) {
+        (ball2 < 7) ? ball2++ : randReset = 1;  
+      }
+      if (randBall == 3) {
+        (ball3 < 7) ? ball3++ : randReset = 1;  
+      }
+      if (randBall == 4) {
+        (ball4 < 7) ? ball4++ : randReset = 1;  
+      }
+      if (randReset != 1)
+      {
+        balls[i] = randBall;
+      }
+      else
+      {
+        if(i > 0)
+          i = i-1;
+        else
+          i = -1;
+      } 
+  }
+  for (int i = 0; i < 28; i++) {
+    Serial.println(balls[i]);
+  }   
+}
+
 void easyMode()
 {
   Wire.beginTransmission(8); // transmit to device #8
@@ -1138,6 +1097,58 @@ void sredMode()
 }
 
 void hardMode()
+{
+  Wire.beginTransmission(8); // transmit to device #8
+  Wire.write(66);              // sends one byte
+  Wire.endTransmission();    // stop transmitting
+  delay(3000);
+  getRandomBallsArray();
+  prevMillisTimerBalls = millis();
+  //отключаем таймеры моторов (всего 4 шага времени (step) задержки на 1 мотор, 5-й останавливает)
+  timer1Step = 5;
+  timer2Step = 5;
+  timer3Step = 5;
+  timer4Step = 5;
+
+  int delay28Balls[28] = {500, 1000, 1000, 5000, 500, 600, 200, 
+                          1000, 1000, 500, 500, 600, 5000, 200,
+                          600, 200, 600, 200, 600, 600, 200,
+                          600, 600, 200, 600, 1000, 1000, 1000};
+  int i = 0; 
+  while ((i < 28) && (digitalRead(START_BUTTON) == 1)) {
+    timerBalls = millis() - prevMillisTimerBalls;
+    if (timerBalls >= (delay28Balls[i]*speedDelayKoef())) {
+      i++;
+      prevMillisTimerBalls = millis();
+    }
+    if (balls[i] == 1)
+    {
+        motor1Start = 1;
+        balls[i] = 0;
+    }
+    if (balls[i] == 2)
+    {
+        motor2Start = 1;
+        balls[i] = 0;
+    }
+    if (balls[i] == 3)
+    {
+        motor3Start = 1;
+        balls[i] = 0;
+    }
+    if (balls[i] == 4)
+    {
+        motor4Start = 1;
+        balls[i] = 0;
+    }
+     motor1();
+     motor2();
+     motor3();
+     motor4();
+  }
+}
+
+void hardModeOld()
 {
 
   Wire.beginTransmission(8); // transmit to device #8
